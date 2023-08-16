@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="mengjingliu@130.245.191.166:22" remoteFilesAllowedToDisappearOnAutoupload="false" showNewOnSourceInSync="false">
+    <serverData>
+      <paths name="host1_CEWIT238">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/mengjingliu/ADL_unsupervised_learning" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="mengjingliu@130.245.191.166:22">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/mengjingliu/ADL_unsupervised_learning" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>
