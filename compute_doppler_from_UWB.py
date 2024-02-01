@@ -1,3 +1,10 @@
+"""
+load segment file of the data session, load .csv datafile to .npy.
+read each segment of baseband data and plot range profile and Doppler.
+
+
+"""
+
 import os
 # import subprocess
 # import random
@@ -55,9 +62,9 @@ range_profile = np.abs(data_complex)
 hp = sns.heatmap(range_profile)
 plt.show()
 
-indices = seg_index(path, filename, path_seg, filename_seg, 1, 6)
-activity = 1
-for ss in indices:
+indices, acts = seg_index(path, filename, path_seg, filename_seg, 1, 6)
+# activity = 1
+for ss, act in zip(indices, acts):
 	start, stop = ss[0], ss[1]
 	range_profile_seg = range_profile[start:stop, :]
 	# locate moving object
@@ -71,8 +78,8 @@ for ss in indices:
 	plt.ticklabel_format(style='sci', scilimits=(0, 0), axis='y')
 	plt.ylabel("standard deviation")
 	plt.xlabel("range bin")
-	plt.title("activity {}, first peak is {}~{}".format(activity, left, right))
-	plt.savefig(os.path.join(path, "first_peak_{}_{}.png".format(activity, node_num)))
+	plt.title("activity {}, first peak is {}~{}".format(act, left, right))
+	plt.savefig(os.path.join(path, "first_peak_{}_{}.png".format(act, node_num)))
 	plt.show()
 
 	# plot range profile

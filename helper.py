@@ -3,7 +3,7 @@ import os.path
 import numpy as np
 from scipy.signal import find_peaks
 import datetime
-from datetime import timedelta
+from datetime import timedelta, timezone
 from scipy.signal import butter, lfilter
 
 
@@ -71,28 +71,35 @@ def load_txt_to_datetime(path, filename):
 
 def load_segment_file_to_datetime(path, filename, if_local=True):
     """
-    load segment file from android app, return datetime list [start, stop].
-    Need to know if it's winter time or summer time if local
+    load App format segment file from android app, return datetime list [start, stop].
+    APP segment file format: "activity name - start: datetime,stop: datetime"
     
     Args:
         path:
         filename:
-        if_local: if the time from android app is local time. if it is, +4h or +5h before return.
+        if_local: if the time from android app is local time. if it is, set timezone to UTC.
 
-    Returns: datetime list [start, stop], UTC time.
+    Returns: datetime list [start, stop], UTC time; activity list
 
     """
     dt = []
+    acts = []
     with open(os.path.join(path, filename), 'r') as f:
         lines = f.readlines()
-        if if_local:
-            dt = [[datetime_from_str(line.split(',')[0][6:]) + timedelta(hours=4),
-                   datetime_from_str(line.strip('\n').split(',')[1][5:]) + timedelta(hours=4)]
-                  for line in lines]
-        else:
-            dt = [[datetime_from_str(line.split(',')[0][6:]), datetime_from_str(line.strip('\n').split(',')[1][5:])]
-                  for line in lines]
-    return dt
+        
+        for line in lines:
+            act = line.strip('\n').split(' - ')[0]
+            acts.append(act)
+            ss = line.strip('\n').split(' - ')[1].split(',')
+            dt.append(datetime_from_str(ss[0][7:]).astimezone(timezone.utc), datetime_from_str(ss[1][6:]).astimezone(timezone.utc))
+            # if if_local:
+            #     dt = [[datetime_from_str(line.split(',')[0][6:]).astimezone(timezone.utc),
+            #            datetime_from_str(line.strip('\n').split(',')[1][5:]).astimezone(timezone.utc)]
+            #           for line in lines]
+            # else:
+            #     dt = [[datetime_from_str(line.split(',')[0][6:]), datetime_from_str(line.strip('\n').split(',')[1][5:])]
+            #           for line in lines]
+    return dt, acts
 
 
 def dt_delta(dt1, dt2):
@@ -101,7 +108,7 @@ def dt_delta(dt1, dt2):
 
 def seg_index(path, filename, path_seg, filename_seg, start_seg=0, stop_seg=None):
     """
-load segment file and UWB frame timestamp file, find the frame indices of each segment in UWB data,
+load segment file (format: start: datetime, stop: datetime) and UWB frame timestamp file, find the frame indices of each segment in UWB data,
 return the frame indices of each segment in UWB date.
     Args:
         path: UWB timestamp file path
@@ -111,7 +118,8 @@ return the frame indices of each segment in UWB date.
         start_seg: which segment to start
         stop_seg: which segment to stop
 
-    Returns: list of [start, stop], int
+    Returns: list of [start, stop], int. the start and stop indices of each segment in UWB timestamp file.
+    Assume UWB timestamp, imaginary, real data files are aligned row by row, the returned indices are used to read UWB data for each activity.
 
     """
     # path = "/home/mengjingliu/ADL_data/I2HSeJ_ADL_1"
@@ -123,7 +131,7 @@ return the frame indices of each segment in UWB date.
     # filename_seg = "2023-07-03-16-50-45_I2HSeJ_ADL_1.txt"
     
     dt = load_txt_to_datetime(path, ts_uwb_file)    # load timestamp of each data frame
-    seg = load_segment_file_to_datetime(path_seg, filename_seg)     # load segmentation from android app
+    seg, acts = load_segment_file_to_datetime(path_seg, filename_seg)     # load segmentation from android app
     
     i = start_seg
     start, stop = seg[i][0], seg[i][1]
@@ -159,7 +167,7 @@ return the frame indices of each segment in UWB date.
                     start, stop = seg[i][0], seg[i][1]
                 next_act = False
             
-    return indices
+    return indices, acts
 
 
 def find_index(start, stop, dt):
